@@ -1,0 +1,65 @@
+name: StreamYard 24/7 Final
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Har 6 ghante mein restart
+  workflow_dispatch:
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install System Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio
+
+      - name: Start Stream & Bypass Permissions
+        env:
+          STREAM_KEY: ${{ secrets.STREAM_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          STUDIO_URL: ${{ secrets.STUDIO_URL }}
+        run: |
+          # 1. Virtual Display aur Audio Setup
+          Xvfb :99 -screen 0 1920x1080x24 &
+          export DISPLAY=:99
+          pulseaudio --start --exit-idle-time=-1
+          fluxbox &
+          sleep 5
+
+          # 2. Chrome Settings (Permissions Bypass)
+          # Isme fake mic aur cam add kiya hai taaki StreamYard error na de
+          google-chrome-stable --no-sandbox \
+            --use-fake-ui-for-media-stream \
+            --use-fake-device-for-media-stream \
+            --autoplay-policy=no-user-gesture-required \
+            --start-maximized \
+            --window-size=1920,1080 \
+            "$STUDIO_URL" &
+
+          sleep 25 # Page load hone ka wait
+
+          # 3. FFmpeg Live Streaming (YouTube)
+          # Isme video aur audio dono capture ho rahe hain
+          ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
+          -f pulse -i default -c:v libx264 -preset veryfast \
+          -b:v 3000k -maxrate 3000k -bufsize 6000k \
+          -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
+          -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
+
+          # 11 Ghante 50 Minute ka timer
+          sleep 42600s
+
+      - name: Auto Trigger Restart
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          curl -X POST -H "Authorization: token $GH_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/streamyard_final.yml/dispatches \
+          -d '{"ref":"main"}'
+          
