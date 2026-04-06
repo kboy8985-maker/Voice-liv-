@@ -1,4 +1,4 @@
-name: StreamYard 24/7 Final Bypass
+name: StreamYard 24/7 Total Stealth
 
 on:
   schedule:
@@ -23,50 +23,45 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           STUDIO_URL: ${{ secrets.STUDIO_URL }}
         run: |
-          # 1. Display aur Audio setup
+          # 1. Background Setup
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # 2. Chrome Stealth Mode (Bypass Signup/Login)
-          # Isme --incognito aur automation bypass flags hain
+          # 2. Chrome Stealth Launch (Sahi Guest Mode)
+          # Isme saare wo flags hain jo Chrome ko real dikhayenge
           google-chrome-stable --no-sandbox \
             --no-first-run \
-            --no-default-browser-check \
-            --incognito \
             --disable-blink-features=AutomationControlled \
+            --disable-infobars \
+            --enable-automation=false \
+            --password-store=basic \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
+            --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
             --start-maximized \
-            --window-size=1920,1080 \
             "$STUDIO_URL" &
 
-          sleep 60 # Page ko poora load hone do
+          sleep 60
 
-          # --- AUTO CLICKER LOGIC ---
-          # A. Cookies hatane ke liye
+          # 3. AUTO BYPASS (Cookies + Name + Join)
           xdotool key Escape
           sleep 2
           xdotool key Tab
           sleep 1
           xdotool key Return
           sleep 5
-
-          # B. Name Type Karna (Agar mangta hai)
           xdotool key Tab
           sleep 1
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           xdotool key Return
           sleep 10
-
-          # C. Final Stage Join (Mic/Cam check bypass)
           xdotool key Return
-          sleep 5
 
-          # 3. FFmpeg Streaming
+          # 4. FFmpeg Stream
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -81,6 +76,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/streamyard_final.yml/dispatches \
           -d '{"ref":"main"}'
+          
