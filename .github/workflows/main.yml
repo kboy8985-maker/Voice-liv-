@@ -1,15 +1,15 @@
-name: StreamYard 24/7 Final
+name: StreamYard 24/7 Pro Max
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Har 6 ghante mein restart
+    - cron: '0 */6 * * *' # Har 6 ghante mein auto-restart
   workflow_dispatch:
 
 jobs:
   stream:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
       - name: Install System Tools
@@ -17,22 +17,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio
 
-      - name: Start Stream & Bypass Permissions
+      - name: Start Environment & Bypass Chrome Popups
         env:
           STREAM_KEY: ${{ secrets.STREAM_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           STUDIO_URL: ${{ secrets.STUDIO_URL }}
         run: |
-          # 1. Virtual Display aur Audio Setup
+          # 1. Virtual Display aur Audio start karna
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # 2. Chrome Settings (Permissions Bypass)
-          # Isme fake mic aur cam add kiya hai taaki StreamYard error na de
+          # 2. Chrome ko StreamYard par bhejna (Saare Popups Bypass)
           google-chrome-stable --no-sandbox \
+            --no-first-run \
+            --no-default-browser-check \
+            --disable-infobars \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
             --autoplay-policy=no-user-gesture-required \
@@ -40,17 +42,17 @@ jobs:
             --window-size=1920,1080 \
             "$STUDIO_URL" &
 
-          sleep 25 # Page load hone ka wait
+          sleep 35 # Page aur Layout load hone ka wait
 
-          # 3. FFmpeg Live Streaming (YouTube)
-          # Isme video aur audio dono capture ho rahe hain
+          # 3. FFmpeg Se YouTube Live (Screen + Audio Capture)
+          # Agar background.mp4 upload kiya hai toh use add kar lena, varna ye simple best hai
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
           -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
 
-          # 11 Ghante 50 Minute ka timer
+          # 11 Ghante 50 Minute tak chalega
           sleep 42600s
 
       - name: Auto Trigger Restart
