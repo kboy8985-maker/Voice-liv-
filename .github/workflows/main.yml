@@ -1,4 +1,4 @@
-name: StreamYard Fixed 24/7
+name: Google Meet 24/7 Stream
 
 on:
   schedule:
@@ -17,54 +17,46 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio xdotool
 
-      - name: Run Fixed Stream
+      - name: Start Environment
         env:
           STREAM_KEY: ${{ secrets.STREAM_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          STUDIO_URL: ${{ secrets.STUDIO_URL }}
+          # Yahan apna Google Meet Link daalna (e.g., https://meet.google.com/abc-defg-hij)
+          MEET_URL: ${{ secrets.MEET_URL }} 
         run: |
-          # 1. Background Setup
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # 2. Chrome Launch (Force Guest Mode using --app)
-          # Isse browser window ek app ki tarah khulegi bina kisi address bar ke
+          # Chrome Launch (Google Meet Mode)
           google-chrome-stable --no-sandbox \
             --no-first-run \
-            --disable-blink-features=AutomationControlled \
-            --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
-            --app="$STUDIO_URL" &
+            --start-maximized \
+            "$MEET_URL" &
 
-          sleep 60
+          sleep 40 # Meet load hone ka wait
 
-          # 3. AUTO BYPASS (Click & Type)
-          # Pehle 2 baar Escape taaki koi login pop-up ho toh hat jaye
-          xdotool key Escape
-          sleep 2
+          # --- AUTO JOIN LOGIC ---
+          # 1. 'Dismiss' any popups
           xdotool key Escape
           sleep 2
           
-          # Cookies Accept (Tab + Enter)
+          # 2. 'Join Now' button par click karne ke liye Tab + Enter
+          # Meet mein aamtaur par 3-4 baar Tab dabane se 'Join' select hota hai
+          xdotool key Tab
+          sleep 1
+          xdotool key Tab
+          sleep 1
           xdotool key Tab
           sleep 1
           xdotool key Return
           sleep 5
-          
-          # Naam Type Karna
-          xdotool key Tab
-          sleep 1
-          xdotool type "FAIZ 1611 LIVE"
-          sleep 2
-          xdotool key Return # Enter Studio
-          sleep 10
-          xdotool key Return # Join Stage
-          
-          # 4. FFmpeg Stream
+
+          # --- FFmpeg Streaming to YouTube ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -73,11 +65,13 @@ jobs:
 
           sleep 42600s
 
-      - name: Restart
+      - name: Restart Workflow
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
-          https://api.github.com/repos/${{ github.repository }}/actions/workflows/streamyard_fixed.yml/dispatches \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/meet_stream.yml/dispatches \
           -d '{"ref":"main"}'
+          
