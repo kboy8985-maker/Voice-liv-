@@ -1,4 +1,4 @@
-name: StreamYard 24/7 Bypass Pro
+name: StreamYard 24/7 Auto-Join
 
 on:
   schedule:
@@ -23,45 +23,67 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           STUDIO_URL: ${{ secrets.STUDIO_URL }}
         run: |
+          # 1. Virtual Display & Audio Setup
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # Chrome ko 'User Agent' ke saath chalana taaki bot na lage
+          # 2. Chrome Launch (Saare Popups Bypass)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --no-default-browser-check \
-            --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
+            --disable-infobars \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
             --start-maximized \
             "$STUDIO_URL" &
 
-          sleep 40 # Page load hone ka wait
+          sleep 50 # Page load hone ka lamba wait
 
-          # --- AUTO CLICKER TRICK ---
-          # Ye command 'Enter' key press karegi taaki "Enter Studio" ho jaye
+          # --- AUTO CLICK & TYPE LOGIC ---
+          
+          # A. Cookies Button Bypass (Tab aur Enter se)
+          xdotool key Tab
+          sleep 1
+          xdotool key Tab
+          sleep 1
           xdotool key Return
           sleep 5
-          xdotool key Return 
+
+          # B. Naam Type Karna
+          # Ye tab tak Tab dabayega jab tak cursor Name box mein na aa jaye
+          xdotool key Tab
+          sleep 1
+          xdotool type "FAIZ 1611 LIVE"
+          sleep 2
           
-          # FFmpeg Live Start
+          # C. Studio Join Button (Enter)
+          xdotool key Return
+          sleep 8
+
+          # D. Final Stage Join (Enter for Mic/Cam check)
+          xdotool key Return
+          sleep 5
+          
+          # --- FFmpeg Streaming to YouTube ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
           -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
 
+          # 11 Hours 50 Minutes Timer
           sleep 42600s
 
-      - name: Restart
+      - name: Auto Restart Workflow
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/streamyard_final.yml/dispatches \
           -d '{"ref":"main"}'
           
