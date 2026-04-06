@@ -1,4 +1,4 @@
-name: StreamYard 24/7 Auto-Join
+name: StreamYard 24/7 Final Bypass
 
 on:
   schedule:
@@ -23,61 +23,59 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           STUDIO_URL: ${{ secrets.STUDIO_URL }}
         run: |
-          # 1. Virtual Display & Audio Setup
+          # 1. Display aur Audio setup
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # 2. Chrome Launch (Saare Popups Bypass)
+          # 2. Chrome Stealth Mode (Bypass Signup/Login)
+          # Isme --incognito aur automation bypass flags hain
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --no-default-browser-check \
-            --disable-infobars \
+            --incognito \
+            --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
             --start-maximized \
+            --window-size=1920,1080 \
             "$STUDIO_URL" &
 
-          sleep 50 # Page load hone ka lamba wait
+          sleep 60 # Page ko poora load hone do
 
-          # --- AUTO CLICK & TYPE LOGIC ---
-          
-          # A. Cookies Button Bypass (Tab aur Enter se)
-          xdotool key Tab
-          sleep 1
+          # --- AUTO CLICKER LOGIC ---
+          # A. Cookies hatane ke liye
+          xdotool key Escape
+          sleep 2
           xdotool key Tab
           sleep 1
           xdotool key Return
           sleep 5
 
-          # B. Naam Type Karna
-          # Ye tab tak Tab dabayega jab tak cursor Name box mein na aa jaye
+          # B. Name Type Karna (Agar mangta hai)
           xdotool key Tab
           sleep 1
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
-          
-          # C. Studio Join Button (Enter)
           xdotool key Return
-          sleep 8
+          sleep 10
 
-          # D. Final Stage Join (Enter for Mic/Cam check)
+          # C. Final Stage Join (Mic/Cam check bypass)
           xdotool key Return
           sleep 5
-          
-          # --- FFmpeg Streaming to YouTube ---
+
+          # 3. FFmpeg Streaming
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
           -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
 
-          # 11 Hours 50 Minutes Timer
           sleep 42600s
 
-      - name: Auto Restart Workflow
+      - name: Restart
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -86,4 +84,3 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/streamyard_final.yml/dispatches \
           -d '{"ref":"main"}'
-          
