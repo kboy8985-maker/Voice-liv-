@@ -1,4 +1,4 @@
-name: Google Meet 24/7 Stream
+name: Google Meet Final Bypass
 
 on:
   schedule:
@@ -17,12 +17,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio xdotool
 
-      - name: Start Environment
+      - name: Run Meet Stream
         env:
           STREAM_KEY: ${{ secrets.STREAM_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # Yahan apna Google Meet Link daalna (e.g., https://meet.google.com/abc-defg-hij)
-          MEET_URL: ${{ secrets.MEET_URL }} 
+          MEET_URL: ${{ secrets.MEET_URL }}
         run: |
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
@@ -30,25 +29,32 @@ jobs:
           fluxbox &
           sleep 5
 
-          # Chrome Launch (Google Meet Mode)
+          # Chrome Launch (Terms bypass flags ke sath)
           google-chrome-stable --no-sandbox \
             --no-first-run \
+            --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 40 # Meet load hone ka wait
+          sleep 45 # Terms page load hone ka wait
 
-          # --- AUTO JOIN LOGIC ---
-          # 1. 'Dismiss' any popups
+          # --- BYPASS TERMS & JOIN ---
+          # 1. 'Agree' ya 'Accept' button par click karne ke liye logic
+          # Pehle Escape dabayenge koi popup hatane ke liye
           xdotool key Escape
           sleep 2
           
-          # 2. 'Join Now' button par click karne ke liye Tab + Enter
-          # Meet mein aamtaur par 3-4 baar Tab dabane se 'Join' select hota hai
+          # Terms page par aksar 2 baar Tab dabakar 'I agree' aata hai
           xdotool key Tab
           sleep 1
+          xdotool key Tab
+          sleep 1
+          xdotool key Return
+          sleep 10 # Ab Meet load hoga
+
+          # 2. Meet join karne ke liye (Ask to join/Join now)
           xdotool key Tab
           sleep 1
           xdotool key Tab
@@ -56,7 +62,7 @@ jobs:
           xdotool key Return
           sleep 5
 
-          # --- FFmpeg Streaming to YouTube ---
+          # --- FFmpeg YouTube Stream ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -71,7 +77,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/meet_stream.yml/dispatches \
           -d '{"ref":"main"}'
           
