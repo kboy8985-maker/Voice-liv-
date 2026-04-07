@@ -1,4 +1,4 @@
-name: Google Meet Final Bypass
+name: Google Meet Final Join
 
 on:
   schedule:
@@ -29,7 +29,7 @@ jobs:
           fluxbox &
           sleep 5
 
-          # Chrome Launch (Terms bypass flags ke sath)
+          # Chrome Launch (Fake Mic/Cam ke sath)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
@@ -38,29 +38,25 @@ jobs:
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 45 # Terms page load hone ka wait
+          sleep 50 # Page ko poora load hone do (Screnshot wali stage tak)
 
-          # --- BYPASS TERMS & JOIN ---
-          # 1. 'Agree' ya 'Accept' button par click karne ke liye logic
-          # Pehle Escape dabayenge koi popup hatane ke liye
-          xdotool key Escape
+          # --- AUTO FILL NAME & JOIN ---
+          
+          # 1. 'What's your name' box select karne ke liye 1 baar Tab
+          xdotool key Tab
           sleep 2
           
-          # Terms page par aksar 2 baar Tab dabakar 'I agree' aata hai
-          xdotool key Tab
-          sleep 1
-          xdotool key Tab
-          sleep 1
+          # 2. Naam type karna
+          xdotool type "FAIZ 1611 LIVE"
+          sleep 2
+          
+          # 3. 'Join' button par pahunchne ke liye Enter
           xdotool key Return
-          sleep 10 # Ab Meet load hoga
+          sleep 10 # Waiting for host to admit or auto-join
 
-          # 2. Meet join karne ke liye (Ask to join/Join now)
-          xdotool key Tab
-          sleep 1
-          xdotool key Tab
-          sleep 1
-          xdotool key Return
-          sleep 5
+          # 4. Agar 'Ask to join' ke baad koi aur popup aaye
+          xdotool key Escape
+          sleep 2
 
           # --- FFmpeg YouTube Stream ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
