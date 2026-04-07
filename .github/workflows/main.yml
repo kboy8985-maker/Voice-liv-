@@ -1,4 +1,4 @@
-name: Google Meet Tagda Bypass
+name: Google Meet Ultimate Master
 
 on:
   schedule:
@@ -17,18 +17,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio xdotool
 
-      - name: Run Meet Stream
+      - name: Run Master Stream
         env:
           STREAM_KEY: ${{ secrets.STREAM_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           MEET_URL: ${{ secrets.MEET_URL }}
         run: |
+          # 1. Background System Setup
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
+          # 2. Chrome Stealth Launch
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
@@ -37,36 +39,46 @@ jobs:
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 60 # Full load hone do
+          sleep 60 # Poora page load hone ka wait
 
-          # --- TAGDA BYPASS LOGIC ---
+          # --- ERROR-PROOF ENTRY LOGIC ---
           
-          # 1. Kahin bhi faltu pop-up ho toh hatane ke liye Escape
+          # Step A: Saare random pop-ups hatane ke liye Escape
           xdotool key Escape
           sleep 2
-          
-          # 2. Mouse se 'Your Name' box par click (Coordinate 720, 510 approx for center-right)
-          # Hum mouse ko box ki jagah par le jaakar click karenge
-          xdotool mousemove 720 510 click 1
+          xdotool key Escape
           sleep 2
-          
-          # 3. Agar Tab se kaam bane toh double surety ke liye
+
+          # Step B: Screen ke center mein click (Taaki focus browser par aaye)
+          xdotool mousemove 960 540 click 1
+          sleep 2
+
+          # Step C: 'Name Box' tak pahunchne ka guaranteed rasta (Tab Loop)
+          # Hum 5 baar Tab dabayenge taaki focus 'Your Name' par aa jaye
           xdotool key Tab
           sleep 1
-          
-          # 4. Naam type karna
+          xdotool key Tab
+          sleep 1
+          xdotool key Tab
+          sleep 1
+          xdotool key Tab
+          sleep 1
+          xdotool key Tab
+          sleep 1
+
+          # Step D: Naam type karna
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
-          
-          # 5. Join button dabane ke liye Enter
-          xdotool key Return
-          sleep 5
-          
-          # 6. Ek baar aur Enter (Agar 'Ask to join' confirmation aaye)
-          xdotool key Return
-          sleep 5
 
-          # --- FFmpeg YouTube Stream ---
+          # Step E: Join Button (Enter)
+          xdotool key Return
+          sleep 5
+          
+          # Step F: Ek aur Enter agar 'Ask to join' confirm karna ho
+          xdotool key Return
+          sleep 10
+
+          # 3. FFmpeg Streaming
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -75,7 +87,7 @@ jobs:
 
           sleep 42600s
 
-      - name: Restart
+      - name: Auto Restart
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
