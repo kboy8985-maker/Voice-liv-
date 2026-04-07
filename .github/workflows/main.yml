@@ -1,87 +1,86 @@
-name: Google Meet 24/7 Final Join
+name: Google Meet Tagda Bypass
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Har 6 ghante mein auto-restart
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
   stream:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install System Tools
+      - name: Install Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg xvfb fluxbox google-chrome-stable pulseaudio xdotool
 
-      - name: Run Meet Stealth Stream
+      - name: Run Meet Stream
         env:
           STREAM_KEY: ${{ secrets.STREAM_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           MEET_URL: ${{ secrets.MEET_URL }}
         run: |
-          # 1. Virtual Display aur Audio start karna
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           pulseaudio --start --exit-idle-time=-1
           fluxbox &
           sleep 5
 
-          # 2. Chrome Launch (Fake Mic/Cam bypass ke sath)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
-            --disable-notifications \
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 60 # Page load hone ka full wait (Screnshot wali stage tak)
+          sleep 60 # Full load hone do
 
-          # --- AUTO JOIN LOGIC ---
+          # --- TAGDA BYPASS LOGIC ---
           
-          # A. Cookies/Terms bypass (Agar koi pop-up rasta roke)
+          # 1. Kahin bhi faltu pop-up ho toh hatane ke liye Escape
           xdotool key Escape
           sleep 2
           
-          # B. Name Box select karne ke liye Tab dabana
-          # Meet mein 1 ya 2 baar Tab se focus Name box par jata hai
-          xdotool key Tab
+          # 2. Mouse se 'Your Name' box par click (Coordinate 720, 510 approx for center-right)
+          # Hum mouse ko box ki jagah par le jaakar click karenge
+          xdotool mousemove 720 510 click 1
           sleep 2
           
-          # C. Naam type karna
+          # 3. Agar Tab se kaam bane toh double surety ke liye
+          xdotool key Tab
+          sleep 1
+          
+          # 4. Naam type karna
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           
-          # D. 'Join' ya 'Ask to Join' button par click (Enter)
+          # 5. Join button dabane ke liye Enter
           xdotool key Return
-          sleep 10 # Waiting for entry
+          sleep 5
+          
+          # 6. Ek baar aur Enter (Agar 'Ask to join' confirmation aaye)
+          xdotool key Return
+          sleep 5
 
-          # E. Final Escape (Kahin koi extra permission pop-up na ho)
-          xdotool key Escape
-          sleep 2
-
-          # 3. FFmpeg Se YouTube Live (Screen + Audio Capture)
+          # --- FFmpeg YouTube Stream ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
           -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
 
-          # 11 Ghante 50 Minute ka timer
           sleep 42600s
 
-      - name: Auto Trigger Restart
+      - name: Restart
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/meet_stream.yml/dispatches \
           -d '{"ref":"main"}'
           
