@@ -29,19 +29,18 @@ jobs:
           fluxbox &
           sleep 5
 
-          # Chrome Launch (Fixed for Full 1080p Screen)
+          # Wapas wahi Chrome setup jo aapko pasand tha
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
-            --window-size=1920,1080 \
             --start-maximized \
-            --kiosk "$MEET_URL" & # Kiosk mode se poori screen fill ho jayegi
+            --force-device-scale-factor=1.25 "$MEET_URL" & # Isse stream full screen lagegi
 
           sleep 60 
 
-          # --- FORCE JOIN LOGIC ---
+          # --- EXACT SAME LOGIC JO WORK KIYA THA ---
           xdotool key Escape
           sleep 2
           xdotool mousemove 960 540 click 1
@@ -50,10 +49,9 @@ jobs:
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
-          xdotool mousemove 1350 600 click 1 
-          sleep 5
           xdotool key Return
           sleep 10
+          xdotool key Return
 
           # --- FFmpeg Streaming (5:50 Timer) ---
           timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
