@@ -1,4 +1,4 @@
-name: Google Meet Exact Coordinate Bypass
+name: Google Meet Final Force Entry
 
 on:
   schedule:
@@ -37,38 +37,40 @@ jobs:
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 60 # Full load hone do
+          sleep 60 # Page load hone do
 
-          # --- EXACT MOUSE & KEYBOARD LOGIC ---
+          # --- FORCE BYPASS LOGIC ---
           
-          # 1. Pehle screen ko activate karne ke liye center click
+          # 1. 'Meeting Tools' popup ko band karne ke liye (Close button hit karna)
+          xdotool key Escape
+          sleep 2
+          xdotool key Return
+          sleep 2
+          
+          # 2. Backup: Screen ke beech mein click karke Space dabana (Popups hatane ke liye)
           xdotool mousemove 960 540 click 1
-          sleep 2
-          xdotool key Escape # Popups hatane ke liye
+          sleep 1
+          xdotool key space
           sleep 2
 
-          # 2. EXACT CLICK on "Your Name" Box (Right side middle)
-          # 1920x1080 screen par Name box lagbhag yahan hota hai:
-          xdotool mousemove 1350 510 click 1
+          # 3. EXACT CLICK on "Your Name" Box
+          # Screenshot ke mutabiq box thoda niche aur right mein hai
+          xdotool mousemove 1350 495 click 1
           sleep 2
-          
-          # 3. Double Check: Tab dabakar box select karna (Backup rasta)
-          xdotool key Tab
-          sleep 1
           
           # 4. Naam type karna
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           
-          # 5. Join Button par click (Enter)
+          # 5. Join Button (Return/Enter)
           xdotool key Return
           sleep 5
           
-          # 6. 'Ask to Join' confirm karne ke liye dobara Enter
+          # 6. Final confirmation (Agar 'Ask to join' aaye)
           xdotool key Return
           sleep 10
 
-          # 3. FFmpeg YouTube Stream
+          # --- FFmpeg Streaming ---
           ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -77,7 +79,7 @@ jobs:
 
           sleep 42600s
 
-      - name: Restart Workflow
+      - name: Restart
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
