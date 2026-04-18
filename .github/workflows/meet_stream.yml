@@ -29,41 +29,38 @@ jobs:
           fluxbox &
           sleep 5
 
+          # Badlav 1: Launch command mein '--app' aur stealth flags add kiye hain
+          # Isse browser redirect nahi hoga aur direct meeting par focus rakhega
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
             --disable-notifications \
-            --start-maximized \
-            "$MEET_URL" &
+            --app="$MEET_URL" &
 
           sleep 60 
 
-          # --- FORCE BYPASS LOGIC (Pehle Entry) ---
+          # --- FORCE BYPASS LOGIC ---
           xdotool key Escape
           sleep 2
           xdotool mousemove 960 540 click 1
           sleep 1
           
-          # Name box click aur naam type
+          # Badlav 2: Coordinate thoda precise kiya hai Name box ke liye
           xdotool mousemove 1350 495 click 1
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           
-          # Blue Button par direct click
+          # Badlav 3: Enter ki jagah Blue Button par direct click (Bohot zaruri)
           xdotool mousemove 1350 600 click 1
           sleep 5
           xdotool key Return
           sleep 10
 
-          # --- FULL SCREEN COMMAND (Ab screen badi hogi) ---
-          # Meeting ke andar jaane ke baad F11 dabayenge taaki Ubuntu hat jaye
-          xdotool key F11
-          sleep 5
-
-          # --- FFmpeg Streaming (5:50 Timer) ---
+          # --- FFmpeg Streaming ---
+          # 5 Ghante 50 Minute timer
           timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
@@ -79,4 +76,3 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/meet_stream.yml/dispatches \
           -d '{"ref":"main"}'
-          
