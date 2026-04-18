@@ -1,4 +1,4 @@
-name: Google Meet Final Force Entry
+name: Google Meet 24/7 Final Force
 
 on:
   schedule:
@@ -29,6 +29,7 @@ jobs:
           fluxbox &
           sleep 5
 
+          # Chrome Launch (Force Direct URL)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
@@ -39,29 +40,31 @@ jobs:
 
           sleep 60 
 
-          # --- FORCE BYPASS LOGIC ---
+          # --- JOIN LOGIC (Peheli photo wali stage ke liye) ---
           xdotool key Escape
           sleep 2
-          xdotool mousemove 960 540 click 1
-          sleep 1
+          
+          # Name box par click aur naam
           xdotool mousemove 1350 495 click 1
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
+          
+          # Join Button click (Exact Blue Button area)
+          xdotool mousemove 1350 600 click 1
+          sleep 2
           xdotool key Return
+          sleep 5
+          xdotool key Return # Double confirm
           sleep 10
-          xdotool key Return
 
-          # --- FFmpeg Streaming ---
-          # 5 Ghante 50 Minute tak chalega (21000 seconds)
+          # --- FFmpeg Streaming (5:50 Timer) ---
           timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
           -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" || exit 1
 
-      # --- RESTART ONLY ON CRASH/FAILURE ---
-      # Ye step tabhi chalega agar upar wala FFmpeg crash ho jaye
       - name: Restart on Crash
         if: failure()
         env:
