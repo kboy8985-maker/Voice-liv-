@@ -29,38 +29,33 @@ jobs:
           fluxbox &
           sleep 5
 
-          # Badlav 1: Launch command mein '--app' aur stealth flags add kiye hain
-          # Isse browser redirect nahi hoga aur direct meeting par focus rakhega
+          # Chrome Launch (Fixed for Full 1080p Screen)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
-            --disable-notifications \
-            --app="$MEET_URL" &
+            --window-size=1920,1080 \
+            --start-maximized \
+            --kiosk "$MEET_URL" & # Kiosk mode se poori screen fill ho jayegi
 
           sleep 60 
 
-          # --- FORCE BYPASS LOGIC ---
+          # --- FORCE JOIN LOGIC ---
           xdotool key Escape
           sleep 2
           xdotool mousemove 960 540 click 1
           sleep 1
-          
-          # Badlav 2: Coordinate thoda precise kiya hai Name box ke liye
           xdotool mousemove 1350 495 click 1
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
-          
-          # Badlav 3: Enter ki jagah Blue Button par direct click (Bohot zaruri)
-          xdotool mousemove 1350 600 click 1
+          xdotool mousemove 1350 600 click 1 
           sleep 5
           xdotool key Return
           sleep 10
 
-          # --- FFmpeg Streaming ---
-          # 5 Ghante 50 Minute timer
+          # --- FFmpeg Streaming (5:50 Timer) ---
           timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
