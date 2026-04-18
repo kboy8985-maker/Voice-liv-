@@ -37,54 +37,38 @@ jobs:
             --start-maximized \
             "$MEET_URL" &
 
-          sleep 60 # Page load hone do
+          sleep 60 
 
           # --- FORCE BYPASS LOGIC ---
-          
-          # 1. 'Meeting Tools' popup ko band karne ke liye (Close button hit karna)
           xdotool key Escape
           sleep 2
-          xdotool key Return
-          sleep 2
-          
-          # 2. Backup: Screen ke beech mein click karke Space dabana (Popups hatane ke liye)
           xdotool mousemove 960 540 click 1
           sleep 1
-          xdotool key space
-          sleep 2
-
-          # 3. EXACT CLICK on "Your Name" Box
-          # Screenshot ke mutabiq box thoda niche aur right mein hai
           xdotool mousemove 1350 495 click 1
           sleep 2
-          
-          # 4. Naam type karna
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
-          
-          # 5. Join Button (Return/Enter)
-          xdotool key Return
-          sleep 5
-          
-          # 6. Final confirmation (Agar 'Ask to join' aaye)
           xdotool key Return
           sleep 10
+          xdotool key Return
 
           # --- FFmpeg Streaming ---
-          ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
+          # 5 Ghante 50 Minute tak chalega (21000 seconds)
+          timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
           -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k \
-          -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" &
+          -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" || exit 1
 
-          sleep 42600s
-
-      - name: Restart
-        if: always()
+      # --- RESTART ONLY ON CRASH/FAILURE ---
+      # Ye step tabhi chalega agar upar wala FFmpeg crash ho jaye
+      - name: Restart on Crash
+        if: failure()
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           curl -X POST -H "Authorization: token $GH_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/meet_stream.yml/dispatches \
           -d '{"ref":"main"}'
           
