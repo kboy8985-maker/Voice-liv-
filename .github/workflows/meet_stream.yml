@@ -1,4 +1,4 @@
-name: Google Meet 24/7 Final Force
+name: Google Meet Final Popup Killer
 
 on:
   schedule:
@@ -29,33 +29,40 @@ jobs:
           fluxbox &
           sleep 5
 
-          # Chrome Launch (Force Direct URL)
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
+            --disable-features=InProductHelp,IPH_GoogleMeet \
             --start-maximized \
             "$MEET_URL" &
 
           sleep 60 
 
-          # --- JOIN LOGIC (Peheli photo wali stage ke liye) ---
+          # --- JOIN LOGIC (Verified Coordinates) ---
+          
+          # Popups ko hatane ke liye
           xdotool key Escape
           sleep 2
-          
-          # Name box par click aur naam
+          xdotool key Escape
+          sleep 2
+          xdotool mousemove 960 540 click 1 # Screen activate karne ke liye center click
+          sleep 1
+
+          # 1. Name box par click (Coordinate 1350, 495)
           xdotool mousemove 1350 495 click 1
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           
-          # Join Button click (Exact Blue Button area)
-          xdotool mousemove 1350 600 click 1
-          sleep 2
-          xdotool key Return
+          # 2. Join Button par click (Yahan maine coordinate wapas 600 ke paas rakha hai)
+          # Blue button thoda niche hota hai, isliye 600-610 perfect hai
+          xdotool mousemove 1350 605 click 1 
+          sleep 1
+          xdotool key Return # Backup Enter
           sleep 5
-          xdotool key Return # Double confirm
+          xdotool key Return # Double confirm entry
           sleep 10
 
           # --- FFmpeg Streaming (5:50 Timer) ---
