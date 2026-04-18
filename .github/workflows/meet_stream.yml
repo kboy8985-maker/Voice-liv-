@@ -1,4 +1,4 @@
-name: Google Meet Final Popup Killer
+name: Google Meet Final Force Entry
 
 on:
   schedule:
@@ -29,43 +29,38 @@ jobs:
           fluxbox &
           sleep 5
 
+          # Badlav 1: Launch command mein '--app' aur stealth flags add kiye hain
+          # Isse browser redirect nahi hoga aur direct meeting par focus rakhega
           google-chrome-stable --no-sandbox \
             --no-first-run \
             --disable-blink-features=AutomationControlled \
             --use-fake-ui-for-media-stream \
             --use-fake-device-for-media-stream \
-            --disable-features=InProductHelp,IPH_GoogleMeet \
-            --start-maximized \
-            "$MEET_URL" &
+            --disable-notifications \
+            --app="$MEET_URL" &
 
           sleep 60 
 
-          # --- JOIN LOGIC (Verified Coordinates) ---
-          
-          # Popups ko hatane ke liye
+          # --- FORCE BYPASS LOGIC ---
           xdotool key Escape
           sleep 2
-          xdotool key Escape
-          sleep 2
-          xdotool mousemove 960 540 click 1 # Screen activate karne ke liye center click
+          xdotool mousemove 960 540 click 1
           sleep 1
-
-          # 1. Name box par click (Coordinate 1350, 495)
+          
+          # Badlav 2: Coordinate thoda precise kiya hai Name box ke liye
           xdotool mousemove 1350 495 click 1
           sleep 2
           xdotool type "FAIZ 1611 LIVE"
           sleep 2
           
-          # 2. Join Button par click (Yahan maine coordinate wapas 600 ke paas rakha hai)
-          # Blue button thoda niche hota hai, isliye 600-610 perfect hai
-          xdotool mousemove 1350 605 click 1 
-          sleep 1
-          xdotool key Return # Backup Enter
+          # Badlav 3: Enter ki jagah Blue Button par direct click (Bohot zaruri)
+          xdotool mousemove 1350 600 click 1
           sleep 5
-          xdotool key Return # Double confirm entry
+          xdotool key Return
           sleep 10
 
-          # --- FFmpeg Streaming (5:50 Timer) ---
+          # --- FFmpeg Streaming ---
+          # 5 Ghante 50 Minute timer
           timeout 21000s ffmpeg -f x11grab -video_size 1920x1080 -i :99.0 \
           -f pulse -i default -c:v libx264 -preset veryfast \
           -b:v 3000k -maxrate 3000k -bufsize 6000k \
